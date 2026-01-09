@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Spam Prediction</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
+  <div class="w-full max-w-2xl p-8 bg-white rounded-2xl shadow-xl">
+    <h1 class="mb-6 text-center text-3xl font-bold text-blue-600">Email Spam Prediction</h1>
+    <div class="space-y-4">
+      <textarea id="email" rows="4" placeholder="Enter your email content here..."
+        class="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-transparent resize-none"></textarea>
+      <button id="predictBtn"
+        class="w-full px-6 py-4 bg-gradient-to-r from-blue-400 to-purple-400 text-white font-bold rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all shadow-lg hover:shadow-xl">
+        Predict
+      </button>
+    </div>
+    <div id="result" class="mt-6 text-center text-xl"></div>
+  </div>
+
+  <script>
+    const predictBtn = document.getElementById("predictBtn");
+    const emailInput = document.getElementById("email");
+    const resultDiv = document.getElementById("result");
+
+    predictBtn.addEventListener("click", async () => {
+      const email = emailInput.value.trim();
+      if (!email) {
+        resultDiv.innerHTML = "<span class='text-red-500'>⚠️ Email tidak boleh kosong</span>";
+        return;
+      }
+      resultDiv.innerHTML = "<span class='text-gray-500'>⏳ Processing...</span>";
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: email })
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+           const color = data.prediction === 'spam' ? 'text-red-600' : 'text-green-600';
+           resultDiv.innerHTML = `<div class="font-bold text-2xl ${color}">${data.prediction.toUpperCase()}</div>
+                                  <div class="text-gray-600 text-sm mt-2">Confidence: ${(data.confidence * 100).toFixed(2)}%</div>`;
+        } else {
+           resultDiv.innerHTML = "<span class='text-red-500'>❌ Gagal memprediksi</span>";
+        }
+      } catch (err) {
+        console.error(err);
+        resultDiv.innerHTML = "<span class='text-red-500'>❌ Terjadi kesalahan sistem</span>";
+      }
+    });
+  </script>
+</body>
+</html>
